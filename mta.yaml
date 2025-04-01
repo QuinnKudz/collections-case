@@ -1,0 +1,159 @@
+_schema-version: 3.3.0
+ID: collection_hub
+description: A simple CAP project.
+version: 1.0.0
+modules:
+- name: collection_hub-srv
+  type: nodejs
+  path: gen/srv
+  requires:
+  - name: collection_hub-auth
+  - name: collection_hub-db
+  - name: collection_hub-connectivity
+  - name: collection_hub-destination
+  provides:
+  - name: srv-api
+    properties:
+      srv-url: ${default-url}
+  parameters:
+    buildpack: nodejs_buildpack
+    instances: 1
+  build-parameters:
+    builder: npm-ci
+- name: collection_hub-db-deployer
+  type: hdb
+  path: gen/db
+  requires:
+  - name: collection_hub-db
+  parameters:
+    buildpack: nodejs_buildpack
+- name: collection_hub
+  type: approuter.nodejs
+  path: app/router
+  requires:
+  - name: srv-api
+    group: destinations
+    properties:
+      forwardAuthToken: true
+      name: srv-api
+      url: ~{srv-url}
+  - name: collection_hub-auth
+  - name: collection_hub-destination
+  - name: collection_hub-html5-runtime
+  - name: collection_hub-portal
+  provides:
+  - name: app-api
+    properties:
+      app-protocol: ${protocol}
+      app-uri: ${default-uri}
+  parameters:
+    disk-quota: 256M
+    keep-existing-routes: true
+    memory: 256M
+- name: collection_hub-app-deployer
+  type: com.sap.application.content
+  path: gen
+  requires:
+  - name: collection_hub-html5-repo-host
+    parameters:
+      content-target: true
+  build-parameters:
+    build-result: app/
+    requires:
+    - artifacts:
+      - mycollectionhubmonitoringoverview.zip
+      name: mycollectionhubmonitoringoverview
+      target-path: app//
+- name: collection_hub-portal-deployer
+  type: com.sap.application.content
+  path: app/portal
+  requires:
+  - name: collection_hub-portal
+    parameters:
+      content-target: true
+      service-key:
+        config:
+          content-endpoint: developer
+        name: collection_hub-portal-key
+  - name: collection_hub-auth
+  - name: collection_hub-html5-repo-host
+  - name: collection_hub-app-deployer
+  deployed-after:
+  - collection_hub-app-deployer
+- name: mycollectionhubmonitoringoverview
+  type: html5
+  path: app/monitoring_overview
+  build-parameters:
+    build-result: dist
+    builder: custom
+    commands:
+    - npm install
+    - npm run build:cf
+    supported-platforms: []
+resources:
+- name: collection_hub-auth
+  type: org.cloudfoundry.managed-service
+  parameters:
+    config:
+      tenant-mode: dedicated
+      xsappname: collection_hub-${org}-${space}
+    path: ./xs-security.json
+    service: xsuaa
+    service-plan: application
+- name: collection_hub-db
+  type: com.sap.xs.hdi-container
+  parameters:
+    service: hana
+    service-plan: hdi-shared
+- name: collection_hub-connectivity
+  type: org.cloudfoundry.managed-service
+  parameters:
+    service: connectivity
+    service-plan: lite
+- name: collection_hub-destination
+  type: org.cloudfoundry.managed-service
+  parameters:
+    config:
+      HTML5Runtime_enabled: false
+      init_data:
+        instance:
+          destinations:
+          - Authentication: NoAuthentication
+            HTML5.DynamicDestination: true
+            HTML5.ForwardAuthToken: true
+            Name: collection_hub-srv-api
+            ProxyType: Internet
+            Type: HTTP
+            URL: ~{srv-api/srv-url}
+          - Authentication: NoAuthentication
+            Name: ui5
+            ProxyType: Internet
+            Type: HTTP
+            URL: https://ui5.sap.com
+          existing_destinations_policy: update
+    service: destination
+    service-plan: lite
+- name: collection_hub-html5-repo-host
+  type: org.cloudfoundry.managed-service
+  parameters:
+    service: html5-apps-repo
+    service-plan: app-host
+- name: collection_hub-html5-runtime
+  type: org.cloudfoundry.managed-service
+  parameters:
+    service: html5-apps-repo
+    service-plan: app-runtime
+- name: collection_hub-portal
+  type: org.cloudfoundry.managed-service
+  parameters:
+    service: portal
+    service-plan: standard
+parameters:
+  deploy_mode: html5-repo
+  enable-parallel-deployments: true
+build-parameters:
+  before-all:
+  - builder: custom
+    commands:
+    - npm ci
+    - npx cds build --production

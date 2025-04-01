@@ -1,0 +1,28 @@
+{
+	"scopes": [
+		{
+			"name": "$XSAPPNAME.CollectionViewer",
+			"description": "Viewer role for Collection Service"
+		},
+		{
+			"name": "$XSAPPNAME.CollectionAdmin",
+			"description": "Admin role for Collection Service"
+		}
+	],
+	"attributes": [],
+	"role-templates": [
+		{
+			"name": "CollectionViewer",
+			"description": "Collection Service viewer",
+			"scope-references": ["$XSAPPNAME.CollectionViewer"],
+			"attribute-references": []
+		},
+		{
+			"name": "CollectionAdmin",
+			"description": "Collection Service admin",
+			"scope-references": ["$XSAPPNAME.CollectionAdmin"],
+			"attribute-references": []
+		}
+	],
+	"authorities-inheritance": false
+}

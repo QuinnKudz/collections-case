@@ -1,0 +1,89 @@
+{
+  "name": "collection_hub",
+  "version": "1.0.0",
+  "description": "A simple CAP experiement",
+  "repository": "<Add your repository here>",
+  "license": "UNLICENSED",
+  "private": true,
+  "dependencies": {
+    "@cap-js/hana": "^1",
+    "@sap-cloud-sdk/http-client": "^3.26.4",
+    "@sap/cds": "^8",
+    "@sap/xssec": "^4",
+    "express": "^4"
+  },
+  "devDependencies": {
+    "@cap-js/cds-test": "^0.2.0",
+    "@cap-js/cds-typer": ">=0.1",
+    "@cap-js/cds-types": "^0.9.0",
+    "@cap-js/sqlite": "^1",
+    "@sap/cds-dk": "^8",
+    "@sap/cds-lsp": "^8.9.0",
+    "@types/chai": "^5.2.1",
+    "@types/chai-as-promised": "^8.0.2",
+    "@types/jest": "^29.5.14",
+    "@types/node": "^22.0.0",
+    "axios": "^1.8.4",
+    "cds-plugin-ui5": "^0.9.3",
+    "chai": "^5.2.0",
+    "chai-as-promised": "^8.0.1",
+    "mbt": "^1.2.29",
+    "nock": "^14.0.2",
+    "rimraf": "^5.0.5",
+    "ts-jest": "^29.3.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5"
+  },
+  "scripts": {
+    "start": "cds-serve",
+    "watch": "cds-tsx w",
+    "test": "jest",
+    "watch-monitoring_overview": "cds watch --open my.collection.hub.monitoringoverview/index.html?sap-ui-xx-viewCache=false --livereload false",
+    "undeploy": "cf undeploy collection_hub --delete-services --delete-service-keys --delete-service-brokers",
+    "build": "rimraf resources mta_archives && mbt build --mtar archive",
+    "deploy": "cf deploy mta_archives/archive.mtar --retries 1"
+  },
+  "cds": {
+    "requires": {
+      "auth": {
+        "[development]": {
+          "kind": "dummy"
+        },
+        "[developmproductionent]": {
+          "kind": "xsuaa"
+        }
+      },
+      "db": {
+        "[development]": {
+          "kind": "sql"
+        }
+      },
+      "collector_ECC_SRV": {
+        "kind": "odata-v2",
+        "credentials": {
+          "destination": "ecc",
+          "path": "/sap/not/fake/path/collection/srv"
+        }
+      },
+      "aws_metri_srv": {
+        "kind": "rest",
+        "credentials": {
+          "destination": "aws",
+          "path": "/http/not/fake/aws/endpoint"
+        }
+      }
+    },
+    "sql": {
+      "native_hana_associations": false
+    }
+  },
+  "imports": {
+    "#cds-models/*": "./@cds-models/*/index.js"
+  },
+  "workspaces": [
+    "app/*"
+  ],
+  "sapux": [
+    "app/monitoring_overview"
+  ]
+}
