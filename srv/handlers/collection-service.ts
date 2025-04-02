@@ -3,7 +3,7 @@ import * as collectionModel from "../../@cds-models/CollectionService";
 export default cds.service.impl(async function() {
 	
 	const metricSrv: cds.RemoteService = await cds.connect.to("aws_metri_srv");
-	const eccSrv: cds.RemoteService = await cds.connect.to("collector_ECC_SRV");
+	const eccSrv: cds.RemoteService = await cds.connect.to("collector_ecc_srv");
 	
 
 	this.on(collectionModel.runCollectors, async (req: cds.Request) => {

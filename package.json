@@ -58,7 +58,7 @@
           "kind": "sql"
         }
       },
-      "collector_ECC_SRV": {
+      "collector_ecc_srv": {
         "kind": "odata-v2",
         "credentials": {
           "destination": "ecc",
